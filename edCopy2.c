@@ -170,14 +170,12 @@ void commands(void) {  unsigned int *a1;  int c, temp;  char lastsep;
             case '\n':  if (a1 == 0) { a1 = dot + 1;  addr2 = a1;  addr1 = a1; }
                 if (lastsep == ';') { addr1 = a1; }  print();  continue;
             case 'e':  setnoaddr(); if (vflag && fchange) { fchange = 0;  error(Q); } filename(c);  init();
-                addr2 = zero;  goto caseread;
+                addr2 = zero;   if ((io = open((const char*)file, 0)) < 0) { lastc = '\n';  error(file); }  setwide();  squeeze(0);
+                ninbuf = 0;  c = zero != dol;
+                append(getfile, addr2);  exfile();  fchange = c; continue;
             case 'g':  global(1);  continue;
             case 'p':  case 'P':  newline();  print();  continue;
             case 'Q':  fchange = 0;  case 'q':  setnoaddr();  newline();  quit(0);
-            caseread:
-                if ((io = open((const char*)file, 0)) < 0) { lastc = '\n';  error(file); }  setwide();  squeeze(0);
-                ninbuf = 0;  c = zero != dol;
-                append(getfile, addr2);  exfile();  fchange = c; continue;
             case 'z':  grepline();  continue;
                 
             case 'a':  /* add(0);  continue; */  // fallthrough
@@ -796,14 +794,18 @@ void compile(int eof) {
                 error(Q);
 
 		case '*':
-			if (lastep==0 || *lastep==CBRA || *lastep==CKET)
-				goto defchar;
+                if (lastep==0 || *lastep==CBRA || *lastep==CKET){
+                *ep++ = CCHR;
+                *ep++ = c;
+                }
 			*lastep |= STAR;
 			continue;
 
 		case '$':
-			if ((peekc=getchr()) != eof && peekc!='\n')
-				goto defchar;
+                if ((peekc=getchr()) != eof && peekc!='\n'){
+                *ep++ = CCHR;
+                *ep++ = c;
+                }
 			*ep++ = CDOL;
 			continue;
 
@@ -850,7 +852,6 @@ void compile(int eof) {
 			lastep[1] = cclcnt;
 			continue;
 
-		defchar:
 		default:
 			*ep++ = CCHR;
 			*ep++ = c;
@@ -909,30 +910,36 @@ int advance(char *lp, char *ep) {
 		curlp = lp;
 		while (*lp++)
 			;
-		goto star;
-
+            do {
+                lp--;
+                if (advance(lp, ep))
+                    return(1);
+            } while (lp > curlp);
+            return(0);
 	case CCHR|STAR:
 		curlp = lp;
 		while (*lp++ == *ep)
 			;
 		ep++;
-		goto star;
-
+            do {
+                lp--;
+                if (advance(lp, ep))
+                    return(1);
+            } while (lp > curlp);
+            return(0);
     case CCL|STAR:
     case NCCL|STAR:
         curlp = lp;
         while (cclass(ep, *lp++, ep[-1]==(CCL|STAR)))
             ;
         ep += *ep;
-        goto star;
+            do {
+                lp--;
+                if (advance(lp, ep))
+                    return(1);
+            } while (lp > curlp);
+            return(0);
 
-	star:
-		do {
-			lp--;
-			if (advance(lp, ep))
-				return(1);
-		} while (lp > curlp);
-		return(0);
 
 	default:
 		error(Q);
