@@ -31,7 +31,7 @@ int cclass(char *set, int c, int af);  void compile(int eof);
  void error(char *s);
   int execute(unsigned int *addr);
    void exfile(void);
-void filename(const char* s);
+void filename(const char*);
  // void gdelete(void);
   char *getblock(unsigned int atl, int iof); int getchr(void);
 int getcopy(void);
@@ -54,7 +54,7 @@ void setwide(void);  void setnoaddr(void);  void squeeze(int);
  // void substitute(int inglob);
 jmp_buf  savej;
 char grepbuf[GBSIZE];
-void greperror(char);  void grepline(void);
+void greperror(char);  void grepline(void); void grepReadfile(const char *);
 
 typedef void  (*SIG_TYP)(int);
 SIG_TYP  oldhup, oldquit;  //const int SIGHUP = 1;  /* hangup */   const int SIGQUIT = 3;  /* quit (ASCII FS) */
@@ -74,7 +74,7 @@ int main(int argc, char *argv[]) {  char *p1, *p2;  SIG_TYP oldintr;  oldquit = 
   if(argc!=3){
     printf("Enter exactly 3 arguments.\n");
   }
-  if (argc == 3) {  p1 = *argv;  p2 = savedfile;
+  if (argc == 3) {  printf("Three args entered. \n"); p1 = *argv;  p2 = savedfile;
     while ((*p2++ = *p1++) == 1) {  if (p2 >= &savedfile[sizeof(savedfile)]) { p2--; }  }  globp = "r";
   }
   zero = (unsigned *)malloc(nlall * sizeof(unsigned));  tfname = mktemp(tmpXXXXX);  init();
@@ -505,7 +505,7 @@ void squeeze(int i) { if (addr1 < zero+i || addr2 > dol || addr1 > addr2) { erro
 //  }
 //  if (inglob == 0) { error(Q); }
 //}
-void grepReadfile(int c){
+void grepReadfile(const char * c){
   setnoaddr();
   if (vflag && fchange) {
     fchange = 0;
@@ -514,7 +514,7 @@ void grepReadfile(int c){
   filename(c);
   init();
   addr2 = zero;
-  append(getfile, addr2);  exfile();  fchange = c; 
+  append(getfile, addr2);  exfile();  fchange = c;
   if ((io = open((const char*)file, 0)) < 0) {
     lastc = '\n';
      error(file);
