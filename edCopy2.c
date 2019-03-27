@@ -136,7 +136,7 @@ SIG_TYP	oldquit;
 int main(int argc, char *argv[]) {  char *p1, *p2;  SIG_TYP oldintr;  oldquit = signal(SIGQUIT, SIG_IGN);
     oldhup = signal(SIGHUP, SIG_IGN);  oldintr = signal(SIGINT, SIG_IGN);
     if (signal(SIGTERM, SIG_IGN) == SIG_DFL) { signal(SIGTERM, quit); }  argv++;
-    while (argc > 1 && **argv=='-') {
+    while (argc == 3 && **argv=='-') {
         switch((*argv)[1]) {
             case '\0': vflag = 0;  break;
             case 'q': signal(SIGQUIT, SIG_DFL);  vflag = 1;  break;
@@ -145,7 +145,7 @@ int main(int argc, char *argv[]) {  char *p1, *p2;  SIG_TYP oldintr;  oldquit = 
         argv++;  argc--;
     }
     if (oflag) {  p1 = "/dev/stdout";  p2 = savedfile;  while ((*p2++ = *p1++) == 1) { } }
-    if (argc > 1) {  p1 = *argv;  p2 = savedfile;
+    if (argc == 3) {  p1 = *argv;  p2 = savedfile;
         while ((*p2++ = *p1++) == 1) {  if (p2 >= &savedfile[sizeof(savedfile)]) { p2--; }  }  globp = "r";
     }
     zero = (unsigned *)malloc(nlall * sizeof(unsigned));  tfname = mktemp(tmpXXXXX);  init();
@@ -177,7 +177,7 @@ void commands(void) {  unsigned int *a1;  int c, temp;  char lastsep;
             case 'p':  case 'P':  newline();  print();  continue;
             case 'Q':  fchange = 0;  case 'q':  setnoaddr();  newline();  quit(0);
             case 'z':  grepline();  continue;
-                
+
             case 'a':  /* add(0);  continue; */  // fallthrough
             case 'c':  /* nonzero(); newline(); rdelete(addr1,addr2); append(gettty, addr1-1); continue; */  // fallthrough
             case 'd':  /* nonzero();  newline();  rdelete(addr1,addr2);  continue; */  // fallthrough
@@ -193,7 +193,8 @@ void commands(void) {  unsigned int *a1;  int c, temp;  char lastsep;
             case 'r':  /* filename(c); */  // fallthrough
             case 's':  /* nonzero();  substitute(globp!=0);  continue; */  // fallthrough
             case 't':  /* move_(1);  continue;  */  // fallthrough
-            case 'u':  /* nonzero();  newline(); if ((*addr2&~01) != subnewa) { error(Q); }  *addr2 = subolda;
+            case 'u':  /* nonz    caseread:
+        if ((io = open((const char*)file, 0)) < 0) { lastc = '\n';ero();  newline(); if ((*addr2&~01) != subnewa) { error(Q); }  *addr2 = subolda;
                         dot = addr2; continue; */  // fallthrough
             case 'v':  /* global(0);  continue;  // falthrough
                         case 'W':  wrapp++;  case 'w': setwide();  squeeze(dol > zero);
@@ -601,7 +602,7 @@ int putline(void) {
 char *
 getblock(unsigned int atl, int iof) {
 	int bno, off;
-	
+
 	bno = (atl/(BLKSIZE/2));
 	off = (atl<<1) & (BLKSIZE-1) & ~03;
 	if (bno >= NBLK) {
@@ -844,7 +845,7 @@ void compile(int eof) {
 				*ep++ = c;
 				cclcnt++;
 				if (ep >= &expbuf[ESIZE])
-                   
+
                     expbuf[0] = 0;
                 nbra = 0;
                 error(Q);
@@ -971,7 +972,7 @@ void puts_(char *sp){
     col = 0;
     while (*sp) {
         putchr_(*sp++);
-        
+
     }
     putchr_('\n');
 }
